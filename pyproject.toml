@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "semdecomp"
+version = "0.1"
+authors = [{name="Matthijs Westera", email="m.westera@hum.leidenuniv.nl"}]
+description = "SemDecomp: Separating and paraphrasing meaning components with an LLM."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["transformers", "torch", "accelerate", "optimum", "bitsandbytes"]
+
+[project.scripts]
+semdecomp = "semdecomp:main"
+
+[project.urls]
+"Homepage" = "https://github.com/mwestera/semdecomp"
+"Bug Tracker" = "https://github.com/mwestera/semdecomp/issues"
