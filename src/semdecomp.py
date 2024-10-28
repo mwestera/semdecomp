@@ -2,6 +2,8 @@ import argparse
 import sys
 import json
 import logging
+import numpy
+import itertools
 
 from pydantic import BaseModel
 from outlines import models, generate, samplers
@@ -55,6 +57,7 @@ def main():
     sampler = samplers.multinomial(samples=args.beams, top_k=args.topk, top_p=args.topp, temperature=args.temp)
     generator = generate.json(model, Components, sampler=sampler)
 
+    stats_keeper = []
 
     for n, line in enumerate(args.file):
         if n and not args.json:  # separate multiple lines of output belonging to a single input
@@ -64,11 +67,15 @@ def main():
         prompt = prompt_template.format(original=original_text)
         result = generator(prompt)
 
+        stats_keeper.append(stats_to_record(original_text, result.components))
+
         if args.json:
             print(json.dumps(result.components))
         else:
             for res in result.components:
                 print(res)
+
+    log_stats_summary(stats_keeper)
 
 
 def create_prompt_template(system_prompt: str, prompt_template: str, examples: list[dict]) -> str:
@@ -81,6 +88,24 @@ def create_prompt_template(system_prompt: str, prompt_template: str, examples: l
 
     full_prompt_template = '\n'.join(prompt_lines)
     return full_prompt_template
+
+
+def stats_to_record(original_text, components):
+    return {
+        'n_components': len(components),
+        'components_length_abs': [len(component) for component in components],
+        'components_length_rel': [len(component) / len(original_text) for component in components],
+    }
+
+
+def log_stats_summary(stats_keeper: list[dict]) -> None:
+    stats_lists = {
+        'n_components': [s['n_components'] for s in stats_keeper],
+        'components_length_abs': list(itertools.chain(s['components_length_abs'] for s in stats_keeper)),
+        'components_length_rel': list(itertools.chain(s['components_length_rel'] for s in stats_keeper)),
+    }
+    for key, stats_list in stats_lists.items():
+        logging.info(f'{key}: {numpy.mean(stats_list)} (std: {numpy.std(stats_list)})')
 
 
 if __name__ == '__main__':
