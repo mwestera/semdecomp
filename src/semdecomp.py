@@ -46,7 +46,7 @@ def main():
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG, format='SemDecomp %(levelname)s: %(message)s')
 
-    logging.info(json.dumps(args.__dict__, indent='  '))
+    logging.info(json.dumps({k: v for k, v in args.__dict__.items() if k not in ['file', 'prompt']}, indent='  '))
 
     if not args.prompt:
         logging.warning('Are you sure you don\'t want to specify a custom prompt .json file (--prompt), perhaps containing few-shot examples?')
