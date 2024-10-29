@@ -69,6 +69,9 @@ def main():
         prompt = prompt_template.format(original=original_text)
         result = generator(prompt)
 
+        logging.debug(f'Original: {original_text}')
+        logging.debug(f'Decomposed: {json.dumps(result.components)}')
+
         stats_keeper.append(stats_to_record(original_text, result.components))
 
         if args.json:
