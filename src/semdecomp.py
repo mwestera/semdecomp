@@ -101,8 +101,8 @@ def stats_to_record(original_text, components):
 def log_stats_summary(stats_keeper: list[dict]) -> None:
     stats_lists = {
         'n_components': [s['n_components'] for s in stats_keeper],
-        'components_length_abs': list(itertools.chain(s['components_length_abs'] for s in stats_keeper)),
-        'components_length_rel': list(itertools.chain(s['components_length_rel'] for s in stats_keeper)),
+        'components_length_abs': list(itertools.chain(*(s['components_length_abs'] for s in stats_keeper))),
+        'components_length_rel': list(itertools.chain(*(s['components_length_rel'] for s in stats_keeper))),
     }
     for key, stats_list in stats_lists.items():
         logging.info(f'{key}: {numpy.mean(stats_list)} (std: {numpy.std(stats_list)})')
