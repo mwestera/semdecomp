@@ -44,7 +44,9 @@ def main():
     args = argparser.parse_args()
 
     if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.DEBUG, format='SemDecomp %(levelname)s: %(message)s')
+
+    logging.info(json.dumps(args.__dict__, indent='  '))
 
     if not args.prompt:
         logging.warning('Are you sure you don\'t want to specify a custom prompt .json file (--prompt), perhaps containing few-shot examples?')
