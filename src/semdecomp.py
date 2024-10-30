@@ -55,21 +55,22 @@ class Components(BaseModel):
 def main():
 
     argparser = argparse.ArgumentParser(description='SemDecomp: Separating and paraphrasing meaning components.')
-    argparser.add_argument('file', nargs='?', type=argparse.FileType('r'), default=sys.stdin, help='Input file, one (composite) question per line, or context,question csv; when omitted stdin.')
-    argparser.add_argument('--json_out', action='store_true', help='To output JSON lists.')
-    argparser.add_argument('--prompt', required=False, type=argparse.FileType('r'), default=None, help='.jsonl file with system prompt, prompt template, and examples (keys original, components)')
-    argparser.add_argument('--model', required=False, default="unsloth/llama-3-70b-bnb-4bit", type=str)  #  debug: xiaodongguaAIGC/llama-3-debug
-
-    argparser.add_argument('--tries', required=False, type=int, help='How often to try; only with unconstrained generation', default=1)
+    argparser.add_argument('file', nargs='?', type=argparse.FileType('r'), default=sys.stdin, help='Input file, one (composite) question per line, or context,question csv (with --context).')
+    argparser.add_argument('--prompt', required=False, type=argparse.FileType('r'), default=None, help='.jsonl file with system prompt, prompt template, and examples (each with keys "original" and "response"; also "context" if --context is given)')
+    argparser.add_argument('--json_out', action='store_true', help='To output JSON lists instead of plaintext lines.')
     argparser.add_argument('--context', action='store_true', help='To distinguish context from target sentence in prompt and examples (keys: context, original, components).')
+    argparser.add_argument('--model', required=False, default="unsloth/llama-3-70b-bnb-4bit", type=str, help='Huggingface identifier.')  #  debug: xiaodongguaAIGC/llama-3-debug
 
     # sampling params
     argparser.add_argument('--temp', required=False, type=float, help='Temperature to use for sampling; greedy (deterministic) if 0', default=0.0)
     argparser.add_argument('--topp', required=False, type=float, help='Sample only from top p portion of probability distribution', default=.9)
     argparser.add_argument('--topk', required=False, type=int, help='Sample only from top k tokens with max probability', default=None)
     argparser.add_argument('--beams', required=False, type=int, help='number of beams to search; only with sampling enabled (--temp)', default=1)
-    argparser.add_argument('--json', action='store_true', help='Whether to constrain generation to JSON (detrimental: https://arxiv.org/abs/2408.02442v1), or a plain bullet list.')
+    argparser.add_argument('--json', action='store_true', help='Whether to constrain generation to JSON (detrimental: https://arxiv.org/abs/2408.02442v1); otherwise it will mostly respond with plain bullet lists, which will then be parsed.')
+
+    # retrying params
     argparser.add_argument('--retry_hotter', required=False, type=float, help='Temperature increment for retries', default=0.1)
+    argparser.add_argument('--tries', required=False, type=int, help='How often to try; only used with unconstrained generation', default=1)
 
     argparser.add_argument('-v', '--verbose', action='store_true', help='To show debug messages.')
 
@@ -82,6 +83,9 @@ def main():
 
     if not args.prompt:
         logging.warning('Are you sure you don\'t want to specify a custom prompt .json file (--prompt), perhaps containing few-shot examples?')
+
+    if args.tries <= 1 and not args.json:
+        logging.warning('Not using constrained generation (to enable, include --json). This may be a wise choice, but do consider increasing the number of --tries.')
 
     prompt_info = json.load(args.prompt) if args.prompt else DEFAULT_PROMPT_INFO if not args.context else DEFAULT_PROMPT_INFO_CONTEXT
     prompt_template = create_prompt_template(**prompt_info, request_json=args.json)

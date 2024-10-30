@@ -4,7 +4,7 @@ It uses a local LLM to, for example, go from this composite question:
 
 > Hoe duur was die wasmachine, van welke winkel en bevalt hij?
 
-To its three component questions:
+to its three component questions:
 
 > Hoe duur was die wasmachine?
 > Waar heb je die wasmachine gekocht?
@@ -12,8 +12,6 @@ To its three component questions:
 
 
 ## Install ##
-
-Ideally in a virtual environment (or use `pipx`):
 
 ```bash
 pip install git+https://github.com/mwestera/semdecomp
@@ -30,21 +28,31 @@ Hoe werkt dat en waarom?
 Wie ben je en hoe oud ben je?
 ```
 
-You can feed it into `semdecomp` like this (for example; without --temp the behavior is greedy/deterministic):
+You can feed it into `semdecomp` like this:
 
 ```bash
 semdecomp questions.txt --temp .3
 ```
 
-This will output one subquestion per line, the outputs for different inputs separated by empty lines. Alternatively, add `--json` to get a single-line JSON list per input, instead of potentially multiple lines.
-
 Or pipe into it:
 
 ```bash
-cat questions.txt | semdecomp --json
+cat questions.txt | semdecomp
 ```
 
-And by all means specify a custom prompt:
+This will output one subquestion per line, the potentially multiple outputs for different inputs separated by empty lines.
+
+Alternatively, add `--json_out` to get a single-line JSON list per input, instead of potentially multiple plain text lines.
+
+For more info about the options, do: 
+
+```bash
+semdecomp --help
+```
+
+## Usage with a custom prompt (recommended)
+
+You can specify a custom prompt, with few-shot examples, from a separate `.json` file:
 
 ```bash
 semdecomp questions.txt --prompt questions_prompt.json
