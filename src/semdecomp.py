@@ -177,7 +177,7 @@ def retry_until_parse(prompt, model, parser, n_tries=None, fail_ok=False, try_sk
     result = None
     collected_error_messages = []
 
-    while result is None and (n_tries is None or n_try < n_tries):
+    while n_tries is None or n_try < n_tries:
         generator = generate.text(
             model,
             sampler=samplers.GreedySampler() if not current_temp else samplers.multinomial(beams, top_p=top_p, top_k=top_k, temperature=current_temp)
@@ -197,9 +197,16 @@ def retry_until_parse(prompt, model, parser, n_tries=None, fail_ok=False, try_sk
                 except ValueError as e2:
                     collected_error_messages.append(str(e1) + ' & ' + str(e2))
                     continue
+                else:
+                    break
             else:
                 collected_error_messages.append(str(e1))
                 continue
+        else:
+            break
+
+    if result:
+        return result
 
     error_message = f'Max number of retries ({"; ".join(collected_error_messages)})'
     if not fail_ok:
