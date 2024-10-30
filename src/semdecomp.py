@@ -173,7 +173,7 @@ def retry_until_parse(prompt, model, parser, n_tries=None, fail_ok=False, try_sk
     result = None
     collected_error_messages = []
 
-    while result is None and (n_retries is None or n_try < n_tries):
+    while result is None and (n_tries is None or n_try < n_tries):
         generator = generate.text(
             model,
             sampler=samplers.GreedySampler() if not current_temp else samplers.multinomial(beams, top_p=top_p, top_k=top_k, temperature=current_temp)
