@@ -106,7 +106,7 @@ def main():
 
         prompt = prompt_template.format(**item)
         response = generator(prompt, max_tokens=200)
-        components = response or [item['original']]
+        components = response.components if args.json else (response or [item['original']])
 
         logging.debug(f'{n}\nOriginal: {item["original"]}\nDecomposed: {json.dumps(components)}')
         stats_keeper.append(stats_to_record(item['original'], components, success=bool(response)))
