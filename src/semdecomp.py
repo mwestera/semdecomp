@@ -20,30 +20,17 @@ MAX_TOKENS=500
 DEFAULT_PROMPT_INFO = {
     'system_prompt': "Often a single sentence conveys multiple ideas/meanings. Here, we decompose one or a few sentences into their component meanings, each phrased as a stand-alone sentence.",
     'prompt_template': """## Example {n}. 
-
-> {original}
-
-We can *maximally decompose* this into the following meaning components, each rephrased as an independent sentence:
-
-{response}
-
-""",
+Original: "{original}"
+Components, rephrased independently:{response}""",
     'examples': [],
 }
 
 DEFAULT_PROMPT_INFO_CONTEXT = {
     'system_prompt': "Often a single sentence conveys multiple ideas/meanings. Here, we decompose one or a few sentences into their component meanings, each phrased as a stand-alone sentence.",
     'prompt_template': """## Example {n}. 
-
-Some prior context: "{context}"
-
-Target sentence to decompose: "{original}"
-
-Target sentence's components: 
-
-{response}
-
-""",
+Prior context: "{context}"
+Target sentence: "{original}"
+Components of target sentence, rephrased independently:{response}""",
     'examples': [],
 }
 
