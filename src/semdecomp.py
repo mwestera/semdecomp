@@ -117,12 +117,13 @@ def create_prompt_template(system_prompt: str, prompt_template: str, examples: l
             prompt_template.format(**prompt_values)
         )
 
-    prompt_values = {'n': n_example+1, 'original': '{original}', 'response': ' ' if request_json else '\n -'}    # don't forget to add this dash to generated text
+    prompt_values = {'n': n_example+1, 'original': '{original}', 'response': ' ' if request_json else '\n -'}   # don't forget to add this dash to generated text
     if '{context}' in prompt_template:
         prompt_values['context'] = '{context}'
-    prompt_lines.append(
-        prompt_template.format(**prompt_values)
-    )
+    final_prompt_line = prompt_template.format(**prompt_values)
+    if final_prompt_line.startswith('## Example'):
+        final_prompt_line = final_prompt_line.replace('\n', ' (Final example!)\n', 1)  # To help it stop hallucinating more and more examples
+    prompt_lines.append(final_prompt_line)
 
     full_prompt_template = '\n\n'.join(prompt_lines)
     logging.info(f'Prompt template: {full_prompt_template}')
@@ -229,11 +230,16 @@ enum_regex = re.compile(r'[ \t]*\d+. +([^\n]+)')
 item_regex = re.compile(r'[ \t]*- +([^\n]+)')
 
 def parse_itemized_list_of_strings(raw) -> list[str]:
+    result = []
     raw = f'- {raw}'    # Because the first dash was given in prompt.
-    result = item_regex.findall(raw)
+    for line in raw.splitlines():
+        if line.startswith('## '):  # Because sometimes the generation continues hallucinating more examples :D
+            break
+        if item_regex.match(line):
+            result.append(line.strip('"\'').strip())
     if not result:
         raise ValueError('Not an itemized/enumerated list of strings')
-    return [s.strip('"\'').strip() for s in result]
+    return result
 
 
 def read_items(file, with_context):
