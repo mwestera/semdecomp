@@ -96,7 +96,7 @@ def main():
         generator = generate.json(model, Components, sampler=samplers.GreedySampler() if not args.temp else samplers.MultinomialSampler(beams=args.beams, top_k=args.topk, top_p=args.topp, temperature=args.temperature))
     else:
         sampling_params = {'beams': args.beams, 'top_k': args.topk, 'top_p': args.topp, 'temperature': args.temp, 'increase_temp': args.retry_hotter}
-        generator = functools.partial(retry_until_parse, model=model, parser=parse_json_or_itemized_list_of_strings, fail_ok=True, n_tries=args.tries, **sampling_params)
+        generator = functools.partial(retry_until_parse, model=model, parser=parse_itemized_list_of_strings, fail_ok=True, n_tries=args.tries, **sampling_params)
 
 
     stats_keeper = []
@@ -105,6 +105,7 @@ def main():
             print()  # separate multiple lines of output belonging to a single input
 
         prompt = prompt_template.format(**item)
+        logging.debug(f'Prompt: {prompt[-200:]}')
         response = generator(prompt, max_tokens=200)
         components = response.components if args.json else (response or [item['original']])
 
@@ -124,19 +125,19 @@ def create_prompt_template(system_prompt: str, prompt_template: str, examples: l
         if request_json:
             prompt_values['response'] = json.dumps({'components': example['response']}).replace('{', '{{').replace('}', '}}')
         else:
-            prompt_values['response'] = '\n'.join('- ' + comp for comp in example['response'])
+            prompt_values['response'] = '\n' + ('\n'.join('- ' + comp for comp in example['response']))
         prompt_lines.append(
             prompt_template.format(**prompt_values)
         )
 
-    prompt_values = {'n': n_example+1, 'original': '{original}', 'response': ''}
+    prompt_values = {'n': n_example+1, 'original': '{original}', 'response': ' ' if request_json else '\n -'}    # don't forget to add this dash to generated text
     if '{context}' in prompt_template:
         prompt_values['context'] = '{context}'
     prompt_lines.append(
         prompt_template.format(**prompt_values)
     )
 
-    full_prompt_template = '\n'.join(prompt_lines)
+    full_prompt_template = '\n\n'.join(prompt_lines)
     logging.info(f'Prompt template: {full_prompt_template}')
     return full_prompt_template
 
@@ -241,7 +242,9 @@ enum_regex = re.compile(r'[ \t]*\d+. +([^\n]+)')
 item_regex = re.compile(r'[ \t]*- +([^\n]+)')
 
 def parse_itemized_list_of_strings(raw) -> list[str]:
-    if len(result := enum_regex.findall(raw)) <= 1 and len(result := item_regex.findall(raw)) <= 1:
+    raw = f'- {raw}'    # Because the first dash was given in prompt.
+    result = item_regex.findall(raw)
+    if not result:
         raise ValueError('Not an itemized/enumerated list of strings')
     return [s.strip('"\'').strip() for s in result]
 
