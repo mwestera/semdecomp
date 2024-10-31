@@ -76,6 +76,7 @@ def main():
 
     prompt_info = json.load(args.prompt) if args.prompt else DEFAULT_PROMPT_INFO if not args.context else DEFAULT_PROMPT_INFO_CONTEXT
     prompt_template = create_prompt_template(**prompt_info, request_json=args.json)
+    final_prompt_nlines = len(prompt_info['prompt_template'].splitlines())
 
     model = models.transformers(args.model)
 
@@ -92,12 +93,16 @@ def main():
             print()  # separate multiple lines of output belonging to a single input
 
         prompt = prompt_template.format(**item)
-        logging.debug(f'Prompt: {prompt[-200:]}')
         response = generator(prompt, max_tokens=200)
         components = response.components if args.json else (response or [item['original']])
-
-        logging.debug(f'{n}\nOriginal: {item["original"]}\nDecomposed: {json.dumps(components)}')
+        if 'context' in item:
+            logging.info('Context:   ', json.dumps(item['context']))
+        logging.info('Original:  ' + json.dumps(item['original']))
+        logging.info('Components: ' + json.dumps(components))
         stats_keeper.append(stats_to_record(item['original'], components, success=bool(response)))
+
+        final_prompt_for_log = '\n'.join(prompt.splitlines()[-final_prompt_nlines:])
+        # logging.debug(f' {n}\n{final_prompt_for_log} {json.dumps(components)}')
         print(json.dumps(components) if args.json_out else '\n'.join(components))
 
     log_stats_summary(stats_keeper)
@@ -110,7 +115,7 @@ def create_prompt_template(system_prompt: str, prompt_template: str, examples: l
     for n_example, example in enumerate(examples, start=1):
         prompt_values = {'n': n_example, **example}
         if request_json:
-            prompt_values['response'] = json.dumps({'components': example['response']}).replace('{', '{{').replace('}', '}}')
+            prompt_values['response'] = ' ' + json.dumps({'components': example['response']}).replace('{', '{{').replace('}', '}}')
         else:
             prompt_values['response'] = '\n' + ('\n'.join('- ' + comp for comp in example['response']))
         prompt_lines.append(
@@ -176,7 +181,9 @@ def retry_until_parse(prompt, model, parser, n_tries=None, fail_ok=False, try_sk
         n_try += 1
 
         raw = generator(prompt, max_tokens=max_tokens)
-        logging.debug(f'(Attempt {n_try}): Model says: {raw}'.replace('\n', '//'))
+
+        logging.debug(f'\n---- Attempt {n_try} ----\n{raw}\n- - - - - - - - - -')
+
         try:
             result = parser(raw)
         except ValueError as e1:
@@ -231,12 +238,12 @@ item_regex = re.compile(r'[ \t]*- +([^\n]+)')
 
 def parse_itemized_list_of_strings(raw) -> list[str]:
     result = []
-    raw = f'- {raw}'    # Because the first dash was given in prompt.
+    raw = f'- {raw}'    # Because the first dash was given in prompt; means first line always matches
     for line in raw.splitlines():
         if line.startswith('## '):  # Because sometimes the generation continues hallucinating more examples :D
             break
-        if item_regex.match(line):
-            result.append(line.strip('"\'').strip())
+        if match := item_regex.fullmatch(line):
+            result.append(match.group(1).strip('"\'').strip())
     if not result:
         raise ValueError('Not an itemized/enumerated list of strings')
     return result
