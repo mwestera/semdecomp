@@ -186,6 +186,7 @@ def retry_until_parse(prompt, model, parser, n_tries=None, fail_ok=False, try_sk
         n_try += 1
 
         raw = generator(prompt, max_tokens=max_tokens, stop_at='\n#').rstrip('#')  # TODO Not sure if smart.
+        raw = f'- {raw}'  # Because the first dash was given in prompt
 
         logging.debug(f'\n---- Attempt {n_try} ----\n{raw.strip()}\n- - - - - - - - - -')
 
@@ -243,7 +244,6 @@ item_regex = re.compile(r'[ \t]*- +([^\n]+)')
 
 def parse_itemized_list_of_strings(raw) -> list[str]:
     result = []
-    raw = f'- {raw}'    # Because the first dash was given in prompt; means first line always matches
     for line in raw.splitlines():
         if line.startswith('## '):  # Because sometimes the generation continues hallucinating more examples :D
             break
