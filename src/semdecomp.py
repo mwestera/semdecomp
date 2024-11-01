@@ -94,12 +94,24 @@ def main():
             print()  # separate multiple lines of output belonging to a single input
 
         prompt = prompt_template.format(**item)
-        response = generator(prompt, max_tokens=200)
-        components = response.components if args.json else (response or [item['original']])
+
+        if args.json:
+            try:    # TODO: Make proper JSON-retrying generator.
+                response = generator(prompt, max_tokens=MAX_TOKENS)
+                components = response.components
+            except json.JSONDecodeError as e:
+                logging.warning(f'Got invalid JSON! Echoing original instead. {e}')
+                response = None
+                components = [item['original']]
+        else:
+            response = generator(prompt, max_tokens=MAX_TOKENS)
+            components = response or [item['original']]
+
         if 'context' in item:
             logging.info('Context:   ' + json.dumps(item['context']))
         logging.info('Original:  ' + json.dumps(item['original']))
         logging.info('Components: ' + json.dumps(components))
+
         stats_keeper.append(stats_to_record(item['original'], components, success=bool(response)))
 
         final_prompt_for_log = '\n'.join(prompt.splitlines()[-final_prompt_nlines:])
