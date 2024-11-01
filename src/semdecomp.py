@@ -96,7 +96,7 @@ def main():
         response = generator(prompt, max_tokens=200)
         components = response.components if args.json else (response or [item['original']])
         if 'context' in item:
-            logging.info('Context:   ', json.dumps(item['context']))
+            logging.info('Context:   ' + json.dumps(item['context']))
         logging.info('Original:  ' + json.dumps(item['original']))
         logging.info('Components: ' + json.dumps(components))
         stats_keeper.append(stats_to_record(item['original'], components, success=bool(response)))
