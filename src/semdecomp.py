@@ -117,12 +117,12 @@ def create_prompt_template(system_prompt: str, prompt_template: str, examples: l
         if request_json:
             prompt_values['response'] = ' ' + json.dumps({'components': example['response']}).replace('{', '{{').replace('}', '}}')
         else:
-            prompt_values['response'] = '\n' + ('\n'.join(' - ' + comp for comp in example['response']))
+            prompt_values['response'] = '\n' + ('\n'.join('- ' + comp for comp in example['response']))
         prompt_lines.append(
             prompt_template.format(**prompt_values)
         )
 
-    prompt_values = {'n': n_example+1, 'original': '{original}', 'response': ' ' if request_json else '\n -'}   # don't forget to add this dash to generated text
+    prompt_values = {'n': n_example+1, 'original': '{original}', 'response': ' ' if request_json else '\n- '}   # don't forget to add this dash to generated text
     if '{context}' in prompt_template:
         prompt_values['context'] = '{context}'
     final_prompt_line = prompt_template.format(**prompt_values)
@@ -180,7 +180,7 @@ def retry_until_parse(prompt, model, parser, n_tries=None, fail_ok=False, try_sk
         current_temp += delta_temp
         n_try += 1
 
-        raw = generator(prompt, max_tokens=max_tokens)
+        raw = generator(prompt, max_tokens=max_tokens, stop_at='\n#').rstrip('#')  # TODO Not sure if smart.
 
         logging.debug(f'\n---- Attempt {n_try} ----\n{raw.strip()}\n- - - - - - - - - -')
 
