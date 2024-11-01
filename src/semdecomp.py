@@ -117,7 +117,7 @@ def create_prompt_template(system_prompt: str, prompt_template: str, examples: l
         if request_json:
             prompt_values['response'] = ' ' + json.dumps({'components': example['response']}).replace('{', '{{').replace('}', '}}')
         else:
-            prompt_values['response'] = '\n' + ('\n'.join('- ' + comp for comp in example['response']))
+            prompt_values['response'] = '\n' + ('\n'.join(' - ' + comp for comp in example['response']))
         prompt_lines.append(
             prompt_template.format(**prompt_values)
         )
