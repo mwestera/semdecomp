@@ -16,6 +16,7 @@ import functools
 MAX_TOKENS=500
 
 # TODO add default examples
+# TODO bypass the need for 'components' in JSON response... I can reuse the one from quotellm.
 
 DEFAULT_PROMPT_INFO = {
     'system_prompt': "Often a single sentence conveys multiple ideas/meanings. Here, we decompose one or a few sentences into their component meanings, each phrased as a stand-alone sentence.",
