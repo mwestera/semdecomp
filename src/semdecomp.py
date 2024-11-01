@@ -182,7 +182,7 @@ def retry_until_parse(prompt, model, parser, n_tries=None, fail_ok=False, try_sk
 
         raw = generator(prompt, max_tokens=max_tokens)
 
-        logging.debug(f'\n---- Attempt {n_try} ----\n{raw}\n- - - - - - - - - -')
+        logging.debug(f'\n---- Attempt {n_try} ----\n{raw.strip()}\n- - - - - - - - - -')
 
         try:
             result = parser(raw)
