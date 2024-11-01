@@ -64,7 +64,7 @@ def main():
     args = argparser.parse_args()
 
     if args.verbose:
-        logging.basicConfig(level=logging.DEBUG, format='SemDecomp %(levelname)s: %(message)s')
+        logging.basicConfig(level=logging.DEBUG, format='')
 
     logging.info(json.dumps({k: v for k, v in args.__dict__.items() if k not in ['file', 'prompt']}, indent='  '))
 
@@ -146,6 +146,9 @@ def stats_to_record(original_text, components, success):
 
 def log_stats_summary(stats_keeper: list[dict]) -> None:
     stats_keeper_successful = [s for s in stats_keeper if s['successful']]
+
+    logging.info('========================')
+    logging.info('subset,stat,mean,std')
     for stats, label in [(stats_keeper, 'all'), (stats_keeper_successful, 'successful')]:
         stats_lists = {
             'successful': [s['successful'] for s in stats],
@@ -154,8 +157,9 @@ def log_stats_summary(stats_keeper: list[dict]) -> None:
             'components_length_rel': list(itertools.chain(*(s['components_length_rel'] for s in stats))),
         }
         for key, stats_list in stats_lists.items():
-            logging.info(f'{key} ({label}): {numpy.mean(stats_list)} (std: {numpy.std(stats_list)})')
-
+            logging.info(f'{label},{key},{numpy.mean(stats_list)},{numpy.std(stats_list)}')
+            # logging.info(f'{key} ({label}): {numpy.mean(stats_list)} (std: {numpy.std(stats_list)})')   # Improve logging.
+    logging.info('========================')
 
 #### Parsing stuff below
 
