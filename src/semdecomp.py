@@ -185,7 +185,11 @@ def retry_until_parse(prompt, model, parser, n_tries=None, fail_ok=False, try_sk
         current_temp += delta_temp
         n_try += 1
 
-        raw = generator(prompt, max_tokens=max_tokens, stop_at='\n#').rstrip('#')  # TODO Not sure if smart.
+        try:
+            raw = generator(prompt, max_tokens=max_tokens, stop_at='\n#').rstrip('#')  # TODO Not sure if smart.
+        except json.JSONDecodeError as e:
+            collected_error_messages.append(str(e))
+            continue
 
         logging.debug(f'\n---- Attempt {n_try} ----\n{raw.strip()}\n- - - - - - - - - -')
 
