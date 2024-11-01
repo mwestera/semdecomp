@@ -247,9 +247,12 @@ def parse_itemized_list_of_strings(raw) -> list[str]:
         if line.startswith('## '):  # Because sometimes the generation continues hallucinating more examples :D
             break
         if match := item_regex.fullmatch(line):
-            result.append(match.group(1).strip('"\'').strip())
+            content = match.group(1).strip('"\'').strip()
+            if enum_regex.fullmatch(content):   # TODO: Generalize this to generic 'fail conditions' parameter
+                raise ValueError('Items contain enumeration marks.')     # turned out to be hallucination-prone with Llama3.
+            result.append(content)
     if not result:
-        raise ValueError('Not an itemized/enumerated list of strings')
+        raise ValueError('Not an itemized list of strings')
     return result
 
 
