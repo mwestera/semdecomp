@@ -266,6 +266,8 @@ def parse_itemized_list_of_strings(raw) -> list[str]:
             result.append(content)
     if not result:
         raise ValueError('Not an itemized list of strings')
+    if len(set(result)) < len(result):
+        raise ValueError('List contains duplicates.')
     return result
 
 
