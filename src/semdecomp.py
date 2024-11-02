@@ -251,7 +251,7 @@ def parse_json_list_of_strings(raw) -> list[str]:
     return result
 
 
-enum_regex = re.compile(r'[ \t]*\d+. +([^\n]+)')
+enum_regex = re.compile(r'[ \t]*\d+\. +([^\n]+)')
 item_regex = re.compile(r'[ \t]*- +([^\n]+)')
 
 def parse_itemized_list_of_strings(raw) -> list[str]:
