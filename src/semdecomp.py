@@ -22,7 +22,7 @@ DEFAULT_PROMPT_INFO = {
     'system_prompt': "Often a single sentence conveys multiple ideas/meanings. Here, we decompose one or a few sentences into their component meanings, each phrased as a stand-alone sentence.",
     'prompt_template': """## Example {n}. 
 Original: "{original}"
-Components, rephrased independently:{response}""",
+Component(s), rephrased independently:{response}""",
     'examples': [],
 }
 
@@ -31,7 +31,7 @@ DEFAULT_PROMPT_INFO_CONTEXT = {
     'prompt_template': """## Example {n}. 
 Prior context: "{context}"
 Target sentence: "{original}"
-Components of target sentence, rephrased independently:{response}""",
+Component(s) of target sentence, rephrased independently:{response}""",
     'examples': [],
 }
 
@@ -135,7 +135,7 @@ def create_prompt_template(system_prompt: str, prompt_template: str, examples: l
             prompt_template.format(**prompt_values)
         )
 
-    prompt_values = {'n': n_example+1, 'original': '{original}', 'response': ' ' if request_json else '\n- '}   # don't forget to add this dash to generated text
+    prompt_values = {'n': n_example+1, 'original': '{original}', 'response': ' ' if request_json else '\n-'}   # don't forget to add this dash to generated text
     if '{context}' in prompt_template:
         prompt_values['context'] = '{context}'
     final_prompt_line = prompt_template.format(**prompt_values)
@@ -198,7 +198,7 @@ def retry_until_parse(prompt, model, parser, n_tries=None, fail_ok=False, try_sk
         n_try += 1
 
         raw = generator(prompt, max_tokens=max_tokens, stop_at='\n#').rstrip('#')  # TODO Not sure if smart.
-        raw = f'- {raw}'  # Because the first dash was given in prompt
+        raw = f'-{raw}'  # Because the first dash was given in prompt
 
         logging.debug(f'\n---- Attempt {n_try} ----\n{raw.strip()}\n- - - - - - - - - -')
 
