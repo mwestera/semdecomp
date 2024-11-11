@@ -46,7 +46,7 @@ def main():
     argparser.add_argument('file', nargs='?', type=argparse.FileType('r'), default=sys.stdin, help='Input file, one (composite) question per line, or context,question csv (with --context).')
     argparser.add_argument('--prompt', required=False, type=argparse.FileType('r'), default=None, help='.jsonl file with system prompt, prompt template, and examples (each with keys "original" and "response"; also "context" if --context is given)')
     argparser.add_argument('--json_out', action='store_true', help='To output JSON lists instead of plaintext lines.')
-    argparser.add_argument('--context', action='store_true', help='To distinguish context from target sentence in prompt and examples (keys: context, original, components).')
+    argparser.add_argument('--context', action='store_true', help='To decompose not a text as a whole, but a sentence given a context (prompt template and examples should have keys: context, original, components).')
     argparser.add_argument('--model', required=False, default="unsloth/llama-3-70b-bnb-4bit", type=str, help='Huggingface identifier.')  #  debug: xiaodongguaAIGC/llama-3-debug
 
     # sampling params
@@ -90,8 +90,16 @@ def main():
 
     stats_keeper = []
     for n, item in enumerate(read_items(args.file, args.context)):
+
         if not args.json_out and n:
             print()  # separate multiple lines of output belonging to a single input
+
+        original = item['original']
+
+        logging.debug(f'----- {n} -----')
+        if 'context' in item:
+            logging.info('Context:    ' + json.dumps(item['context']))
+        logging.info('Original:   ' + json.dumps(original))
 
         prompt = prompt_template.format(**item)
 
@@ -102,17 +110,14 @@ def main():
             except json.JSONDecodeError as e:
                 logging.warning(f'Got invalid JSON! Echoing original instead. {e}')
                 response = None
-                components = [item['original']]
+                components = [original]
         else:
             response = generator(prompt, max_tokens=MAX_TOKENS)
-            components = response or [item['original']]
+            components = response or [original]
 
-        if 'context' in item:
-            logging.info('Context:   ' + json.dumps(item['context']))
-        logging.info('Original:  ' + json.dumps(item['original']))
         logging.info('Components: ' + json.dumps(components))
 
-        stats_keeper.append(stats_to_record(item['original'], components, success=bool(response)))
+        stats_keeper.append(stats_to_record(original, components, success=bool(response)))
 
         final_prompt_for_log = '\n'.join(prompt.splitlines()[-final_prompt_nlines:])
         # logging.debug(f' {n}\n{final_prompt_for_log} {json.dumps(components)}')
