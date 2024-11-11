@@ -2,13 +2,16 @@
 
 It uses a local LLM to, for example, go from this composite question:
 
-> Hoe duur was die wasmachine, van welke winkel en bevalt hij?
+> How expensive was this coffee machine, from which shop and do you like it so far?
 
 to its three component questions:
 
-> Hoe duur was die wasmachine?
-> Waar heb je die wasmachine gekocht?
-> Bevalt die wasmachine?
+> How expensive was this coffee machine?
+> 
+> Where did you buy this coffee machine?
+> 
+> Do you like the coffee machine so far?
+> 
 
 
 ## Install ##
@@ -17,30 +20,23 @@ to its three component questions:
 pip install git+https://github.com/mwestera/semdecomp
 ```
 
-This will make available the command `semdecomp`, which tasks an LLM with splitting a sentence or two into the intents expressed, listed as independent paraphrases.
+This will make available the command `semdecomp`, which tasks an LLM with splitting a sentence or two into the basic components expressed, listed as independent paraphrases.
 
 ## Usage ##
 
-Given a text file `questions.txt` containing composite questions to break down, one per line:
-
-```text
-Hoe werkt dat en waarom?
-Wie ben je en hoe oud ben je?
-```
-
-You can feed it into `semdecomp` like this:
+Given a text file `texts_to_decompose.txt` containing composite questions to break down, one per line, you can feed it into `semdecomp` like this:
 
 ```bash
-semdecomp questions.txt --temp .3
+semdecomp texts_to_decompose.txt
 ```
 
 Or pipe into it:
 
 ```bash
-cat questions.txt | semdecomp
+cat texts_to_decompose.txt | semdecomp
 ```
 
-This will output one subquestion per line, the potentially multiple outputs for different inputs separated by empty lines.
+This will output one component per line, the potentially multiple outputs for different input lines separated by empty lines.
 
 Alternatively, add `--json_out` to get a single-line JSON list per input, instead of potentially multiple plain text lines.
 
@@ -52,13 +48,7 @@ semdecomp --help
 
 ## Usage with a custom prompt (recommended)
 
-You can specify a custom prompt, with few-shot examples, from a separate `.json` file:
-
-```bash
-semdecomp questions.txt --prompt questions_prompt.json
-```
-
-Example of a prompt specification:
+You can specify a custom prompt with `--prompt <filename>`, with reference to a separate `.json` file. Example of a prompt specification with examples for few-shot prompting, in this case for decomposing Dutch questions into their sub-questions:
 
 ```json
 {"system_prompt": "Often a single sentence asks multiple questions. Here, for the Dutch language, we decompose each sentence into its component questions, each phrased as a stand-alone question.",
